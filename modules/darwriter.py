@@ -55,8 +55,12 @@ def main_writer():
 
 
 def run(**args):
-    print "[*] In darwriter module."
-    if not args['thread']:
-        args['thread'] = threading.Thread(target=main_writer)
+    if 'thread' not in args:
+        print "[x] Error! Missing argument 'thread'"
+        return
 
-    return
+    print "[*] In darwriter module (%s)." % str(args['thread'])
+    if not args['thread']:
+        return threading.Thread(target=main_writer)
+
+    return args['thread']
