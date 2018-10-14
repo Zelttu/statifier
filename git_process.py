@@ -101,6 +101,7 @@ def module_runner(module):
     global key_thread
     task_queue.put(1)
     print("KEY THREAD : %s" % str(key_thread))
+    print("\n Module: %s \n" % module)
     if module == 'writer':
         result = sys.modules[module].run(thread=key_thread)
     elif module == 'thread':
