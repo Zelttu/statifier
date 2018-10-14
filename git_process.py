@@ -103,10 +103,9 @@ def module_runner(module):
     print("KEY THREAD : %s" % str(key_thread))
     if module == 'writer':
         result = sys.modules[module].run(thread=key_thread)
+    elif module == 'thread':
+        result = None
     else:
-        if module not in sys.modules.keys() or module == 'thread':
-            print "[x] Error! Module '%s' not found!" % module
-            return
         result = sys.modules[module].run()
     task_queue.get()
     print "[*] Executing module_runer for '%s'" % module
