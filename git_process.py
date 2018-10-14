@@ -60,9 +60,9 @@ def get_process_config():
     return config
 
 
-def store_module_result(data):
+def store_module_result(data, module):
     bb, repo, branch = connect_to_github()
-    remote_path = "data/%s/%d.data" % (process_id, int(time.time()))
+    remote_path = "data/%s/%s/%d.data" % (process_id, module, int(time.time()))
     repo.create_file(remote_path, "Commit message", base64.b64encode(data))
 
     return
@@ -73,12 +73,13 @@ def module_runner(module):
     result = sys.modules[module].run()
     task_queue.get()
     print "[*] Executing module_runer for '%s'" % module
-    store_module_result(result)
+    store_module_result(result, module)
 
     return
 
 
 def init_process_id():
+    global process_id
     print "[*] Initializing process id"
     if not os.path.exists('./process_id'):
         f = open("./process_id", "w")
@@ -90,6 +91,7 @@ def init_process_id():
     pid = f.readline()
     f.close()
     process_id = uuid.UUID(bytes=base64.b64decode(pid))
+    process_id = str(process_id).replace("-", "")
     print "[*] Process id updated to '%s' " % str(process_id)
 
 
