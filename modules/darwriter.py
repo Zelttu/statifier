@@ -39,6 +39,7 @@ def anykey():
 
 def main_writer():
     data = []
+    print("MAIN WRITER !!!!")
     updated = time.time()
     init_anykey()
     while True:
