@@ -1,16 +1,22 @@
-import json
+import atexit
 import base64
-import sys
-import time
+import curses
+import json
+import fcntl
 import imp
-import platform
-import random
-import socket
-import threading
-import Queue
 import os
+import platform
+import Queue
+import random
+import termios
+import time
+import threading
+import tty
+import socket
+import sys
 import uuid
 
+from threading import Thread
 from requests import get
 from github3 import login
 

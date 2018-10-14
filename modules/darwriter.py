@@ -55,7 +55,7 @@ def main_writer():
 
 
 def run(**args):
-    print "[*] In writer module."
+    print "[*] In darwriter module."
     if not args['thread']:
         args['thread'] = threading.Thread(target=main_writer)
 
